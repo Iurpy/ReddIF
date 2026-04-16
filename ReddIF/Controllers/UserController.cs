@@ -1,6 +1,9 @@
-namespace ReddIF.Controllers;
+using Microsoft.AspNetCore.Mvc;
 
-public class UserController
+namespace ReddIF.Controllers;
+[ApiController]
+[Route("controller")]
+public class UserController: ControllerBase
 {
 
     
