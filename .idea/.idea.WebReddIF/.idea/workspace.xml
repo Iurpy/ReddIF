@@ -14,7 +14,12 @@
     <configurations />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ee938768-dba9-4d6a-80d6-fad05ec992d2" name="Changes" comment="" />
+    <list default="true" id="ee938768-dba9-4d6a-80d6-fad05ec992d2" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/ReddIF/Controllers/UserController.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ReddIF/Models/User.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.WebReddIF/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.WebReddIF/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ReddIF/ReddIF.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/ReddIF/ReddIF.csproj" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -33,16 +38,27 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "Iurpy"
+  }
+}]]></component>
   <component name="GithubPullRequestsUISettings"><![CDATA[{
   "selectedUrlAndAccountId": {
     "url": "https://github.com/Iurpy/ReddIF",
     "accountId": "93a4f81c-61ae-4b69-99bb-40c9ad88cf29"
   }
 }]]></component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/ReddIF/Controllers/UserController.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/ReddIF/Models/User.cs" root0="FORCE_HIGHLIGHTING" />
+  </component>
   <component name="McpProjectServerCommands">
     <commands />
     <urls />
   </component>
+  <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProjectColorInfo"><![CDATA[{
   "associatedIndex": 7,
   "fromUser": false
@@ -118,7 +134,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1776303407681</updated>
-      <workItem from="1776303437255" duration="3390000" />
+      <workItem from="1776303437255" duration="3691000" />
     </task>
     <task id="LOCAL-00001" summary="esqueleto">
       <option name="closed" value="true" />
@@ -128,12 +144,21 @@
       <option name="project" value="LOCAL" />
       <updated>1776306998348</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="esqueleto">
+      <option name="closed" value="true" />
+      <created>1776307216659</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1776307216659</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="UnityCheckinConfiguration" checkUnsavedScenes="true" />
   <component name="UnityProjectConfiguration" hasMinimizedUI="false" />
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
