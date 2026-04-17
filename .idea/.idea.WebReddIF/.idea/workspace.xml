@@ -14,13 +14,10 @@
     <configurations />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ee938768-dba9-4d6a-80d6-fad05ec992d2" name="Changes" comment="'">
+    <list default="true" id="ee938768-dba9-4d6a-80d6-fad05ec992d2" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.WebReddIF/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.WebReddIF/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ReddIF/Controllers/UserController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ReddIF/Controllers/UsersController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ReddIF/Models/User.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ReddIF/Models/User.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ReddIF/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ReddIF/Program.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ReddIF/ReddIF.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/ReddIF/ReddIF.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ReddIF/appsettings.json" beforeDir="false" afterPath="$PROJECT_DIR$/ReddIF/appsettings.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ReddIF/Models/Community.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ReddIF/Models/Community.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ReddIF/Models/Post.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ReddIF/Models/Post.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,6 +53,7 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/cd5fef7feefa4d27b1629c59b7ce03ad6e00/c2/731e9fe5/ConfigurationExtensions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/ReddIF/Context/AppDbContext.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/ReddIF/Context/AppDbContextFactory.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/ReddIF/Models/Comment.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/ReddIF/Models/User.cs" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="McpProjectServerCommands">
@@ -141,7 +139,7 @@
       <option name="presentableId" value="Default" />
       <updated>1776303407681</updated>
       <workItem from="1776303437255" duration="3691000" />
-      <workItem from="1776439427787" duration="15468000" />
+      <workItem from="1776439427787" duration="16804000" />
     </task>
     <task id="LOCAL-00001" summary="esqueleto">
       <option name="closed" value="true" />
@@ -159,7 +157,31 @@
       <option name="project" value="LOCAL" />
       <updated>1776307216659</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="algumas coisas">
+      <option name="closed" value="true" />
+      <created>1776455555140</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1776455555141</updated>
+    </task>
+    <task id="LOCAL-00004" summary="classe nova">
+      <option name="closed" value="true" />
+      <created>1776455650972</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1776455650972</updated>
+    </task>
+    <task id="LOCAL-00005" summary="ignorando os json">
+      <option name="closed" value="true" />
+      <created>1776455758665</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1776455758665</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -188,7 +210,10 @@
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
     <MESSAGE value="esqueleto" />
     <MESSAGE value="''" />
-    <option name="LAST_COMMIT_MESSAGE" value="''" />
+    <MESSAGE value="algumas coisas" />
+    <MESSAGE value="classe nova" />
+    <MESSAGE value="ignorando os json" />
+    <option name="LAST_COMMIT_MESSAGE" value="ignorando os json" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

@@ -16,7 +16,7 @@ public class User
 
     [Required(ErrorMessage = "O nome deve ser informado.")]
     [MaxLength(100)]
-    public string Nome { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
     
     [Required(ErrorMessage = "O e-mail precisa ser informado.")]
     [EmailAddress(ErrorMessage = "E-mail invalido.")]
@@ -30,9 +30,9 @@ public class User
     
     public int Karma { get; set; }
 
-    public bool Ativo { get; set; } = true;
+    public bool Active { get; set; } = true;
 
-    public DateTime CriadoEm { get; set; } = DateTime.Now;
+    public DateTime CreateTime { get; set; } = DateTime.Now;
 
     public ICollection<Post> Posts { get; set; }
     //isso aqui diz que um usuario pode ter varios posts
