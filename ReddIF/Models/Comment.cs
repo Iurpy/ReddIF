@@ -1,8 +1,13 @@
+using System.Collections.ObjectModel;
+using Supabase.Postgrest.Attributes;
+using Supabase.Postgrest.Models;
+
+
 namespace ReddIF.Models;
 
-public class Comment
+public class Comment: BaseModel
 {
-    public int Id { get; set; }
+    public int CommentId { get; set; }
     
     public User User { get; set; } //qm fez o coment
 

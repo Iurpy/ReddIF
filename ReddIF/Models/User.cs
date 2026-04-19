@@ -1,42 +1,45 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel.DataAnnotations;
+using Supabase.Gotrue;
+using Supabase.Postgrest.Attributes;
+using Supabase.Postgrest.Models;
 
 namespace ReddIF.Models;
 
-public class User
+[Table("usuario")]
+public class User: BaseModel
 {
+    /*
     public User()
     {
         Posts = new Collection<Post>();
-        Communitys = new Collection<Community>();
+        Communities = new Collection<Community>();
     }
+    */
     
-    [Key]
-    public int Id { get; set; }
-
-    [Required(ErrorMessage = "O nome deve ser informado.")]
-    [MaxLength(100)]
+    [PrimaryKey("userid",false)]
+    public int UserId { get; set; }
+    
+    [Column("nome")]
     public string Name { get; set; } = string.Empty;
     
-    [Required(ErrorMessage = "O e-mail precisa ser informado.")]
-    [EmailAddress(ErrorMessage = "E-mail invalido.")]
-    [MaxLength(150)]
+    [Column("email")]
     public string Email { get; set; } = string.Empty;
-
-    [Required(ErrorMessage = "A senha é obrigatoria.")]
-    [MinLength(8, ErrorMessage = "A senha deve conter no minimo 8 caracteres")]
-    [MaxLength(20, ErrorMessage = "A senha deve ter no maximo 20 caracteres")]
+    
+    [Column("password")]
     public string SenhaHash { get; set; } = string.Empty;
     
+    [Column("karma")]
     public int Karma { get; set; }
 
+    [Column("active")]
     public bool Active { get; set; } = true;
 
+    [Column("criadoem")]
     public DateTime CreateTime { get; set; } = DateTime.Now;
-
+/*
     public ICollection<Post> Posts { get; set; }
     //isso aqui diz que um usuario pode ter varios posts
-    public ICollection<Community> Communitys { get; set; }
+    public ICollection<Community> Communities { get; set; }
     //pode pertencer a varias comunidades
-   
+*/   
 }

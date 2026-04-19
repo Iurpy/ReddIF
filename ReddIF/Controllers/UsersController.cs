@@ -1,7 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
+/*using Microsoft.AspNetCore.Mvc;
 using ReddIF.Models;
-using ReddIF.Context;
-using Microsoft.EntityFrameworkCore;
+using Supabase;
 
 namespace ReddIF.Controllers;
 
@@ -9,6 +8,13 @@ namespace ReddIF.Controllers;
 [Route("api/[controller]")]
 public class UsersController: ControllerBase
 {
-    private readonly AppDbContext _context;
-
+    private readonly Client _supabase;
+    public UsersController(Client supabase)
+    {
+        _supabase = supabase;
+    }
+    
+    [HttpGet]
+    public async 
 }
+*/

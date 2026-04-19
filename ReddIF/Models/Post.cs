@@ -1,19 +1,26 @@
-using System.ComponentModel.DataAnnotations;
+using System.Collections.ObjectModel;
+using Supabase.Postgrest.Attributes;
+using Supabase.Postgrest.Models;
+
 
 namespace ReddIF.Models;
 
-public class Post
+[Table("post")]
+public class Post: BaseModel
 {
-    [Key]
-    public int Id { get; set; }
+    [PrimaryKey("postid", false)]
+    public int PostId { get; set; }
     
+    [Column("userautorid")]
     public int UserAutorId { get; set; }
 
+    [Column("title")]
     public string Title { get; set; } = string.Empty;
     
-    [MaxLength(250)]
+    [Column("content")]
     public string Content { get; set; } = string.Empty;
     
+    [Column("posttime")]
     public DateTime PostTime { get; set; }= DateTime.Now;
     
     public required User User { get; set; }
