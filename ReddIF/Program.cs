@@ -34,8 +34,8 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-var supabaseUrl = "https://nxegzzyxpwrnsptcfcjg.supabase.co";
-var supabaseKey = "sb_secret_eKSr8PFji-Al-EcLBDLHdg_hH70esan";  
+var supabaseUrl = builder.Configuration["Supabase:Url"];
+var supabaseKey = builder.Configuration["Supabase:Key"];  
     
     
 builder.Services.AddSingleton(provider =>
