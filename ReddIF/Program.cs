@@ -1,6 +1,8 @@
 using Scalar.AspNetCore;
 using Supabase;
-
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Cryptography;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,8 +12,30 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+var keyBytes = RandomNumberGenerator.GetBytes(32);
+
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.RequireHttpsMetadata = false;
+        options.SaveToken = true;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
+            ValidateIssuer = false,
+            ValidateAudience = false
+        };
+    });
+
+builder.Services.AddAuthorization();
+
 var supabaseUrl = "https://nxegzzyxpwrnsptcfcjg.supabase.co";
-var supabaseKey = "sb_secret_ye4tqYkUH7XdmJc7PztV7g_55Uaw_Qr";  
+var supabaseKey = "sb_secret_eKSr8PFji-Al-EcLBDLHdg_hH70esan";  
     
     
 builder.Services.AddSingleton(provider =>
@@ -32,5 +56,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
+app.UseAuthentication();
 app.MapControllers();
 app.Run();
