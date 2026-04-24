@@ -1,6 +1,6 @@
 @ReddIF_HostAddress = http://localhost:5062
 
-GET {{ReddIF_HostAddress}}/weatherforecast/
+GET {{ReddIF_HostAddress}}/api/users
 Accept: application/json
 
 ###

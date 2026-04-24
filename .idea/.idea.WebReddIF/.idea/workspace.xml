@@ -14,18 +14,13 @@
     <configurations />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ee938768-dba9-4d6a-80d6-fad05ec992d2" name="Changes" comment="">
+    <list default="true" id="ee938768-dba9-4d6a-80d6-fad05ec992d2" name="Changes" comment="primiero user admin e jwt">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.WebReddIF/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.WebReddIF/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ReddIF/Context/AppDbContext.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ReddIF/Context/AppDbContextFactory.cs" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/ReddIF/Controllers/UsersController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ReddIF/Controllers/UsersController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ReddIF/Models/Comment.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ReddIF/Models/Comment.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ReddIF/Models/Community.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ReddIF/Models/Community.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ReddIF/Models/Post.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ReddIF/Models/Post.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ReddIF/Controllers/teste.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ReddIF/Controllers/teste.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ReddIF/Models/User.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ReddIF/Models/User.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ReddIF/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ReddIF/Program.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ReddIF/ReddIF.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/ReddIF/ReddIF.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ReddIF/appsettings.json" beforeDir="false" afterPath="$PROJECT_DIR$/ReddIF/appsettings.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -58,7 +53,9 @@
   }
 }</component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/ReddIF/Controllers/AdminsControllers.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/ReddIF/Controllers/teste.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/ReddIF/Models/Admin.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/ReddIF/Models/User.cs" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="McpProjectServerCommands">
@@ -84,6 +81,7 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
     &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
@@ -96,7 +94,7 @@
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;RiderPMCOptionsPageId&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;vcs.Git&quot;,
     &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
@@ -143,7 +141,11 @@
       <option name="presentableId" value="Default" />
       <updated>1776303407681</updated>
       <workItem from="1776303437255" duration="3691000" />
-      <workItem from="1776615417924" duration="7578000" />
+      <workItem from="1776615417924" duration="7944000" />
+      <workItem from="1776708437529" duration="11402000" />
+      <workItem from="1776818579629" duration="817000" />
+      <workItem from="1776972748274" duration="3162000" />
+      <workItem from="1776993032649" duration="8644000" />
     </task>
     <task id="LOCAL-00001" summary="esqueleto">
       <option name="closed" value="true" />
@@ -161,7 +163,15 @@
       <option name="project" value="LOCAL" />
       <updated>1776307216659</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="testes">
+      <option name="closed" value="true" />
+      <created>1776633256723</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1776633256724</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -180,6 +190,17 @@
                   <entry key="Show.Git.Branches" value="true" />
                 </map>
               </option>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="main" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
             </State>
           </value>
         </entry>
@@ -189,7 +210,9 @@
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
     <MESSAGE value="esqueleto" />
-    <option name="LAST_COMMIT_MESSAGE" value="esqueleto" />
+    <MESSAGE value="testes" />
+    <MESSAGE value="primiero user admin e jwt" />
+    <option name="LAST_COMMIT_MESSAGE" value="primiero user admin e jwt" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

@@ -27,8 +27,8 @@ public class User: BaseModel
     
     [Column("password")]
     public string SenhaHash { get; set; } = string.Empty;
-    
-    [Column("karma")]
+
+    [Column("karma")] 
     public int Karma { get; set; }
 
     [Column("active")]
@@ -36,10 +36,13 @@ public class User: BaseModel
 
     [Column("criadoem")]
     public DateTime CreateTime { get; set; } = DateTime.Now;
+
+    [Column("role")] public string Role { get; set; } = "user";
+
 /*
     public ICollection<Post> Posts { get; set; }
     //isso aqui diz que um usuario pode ter varios posts
     public ICollection<Community> Communities { get; set; }
     //pode pertencer a varias comunidades
-*/   
+*/
 }

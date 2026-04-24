@@ -1,6 +1,10 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using ReddIF.Models;
 using Supabase;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel;
+using Microsoft.IdentityModel.Tokens;
 
 namespace ReddIF.Controllers;
 
@@ -9,14 +13,14 @@ namespace ReddIF.Controllers;
 public class UsersController : ControllerBase
 {
     private readonly Client _supabase;
+    private readonly IConfiguration _configuration;
 
-    public UsersController(Client supabase)
+    public UsersController(Client supabase, IConfiguration configuration)
     {
         _supabase = supabase;
+        _configuration = configuration;
     }
-
-
-    // função auxiliar pra criptografar senha
+    
 private string HashSenha(string senha)
 {
     return BCrypt.Net.BCrypt.HashPassword(senha);
@@ -29,31 +33,46 @@ private string HashSenha(string senha)
         try
         {
             // Verifica se email já existe
-            var existe = await _supabase
+            var existeEmail = await _supabase
                 .From<User>()
                 .Where(u => u.Email == req.Email)
                 .Get();
-
-            if (existe.Models.Any())
+            
+            var exiteNome = await _supabase
+                .From<User>()
+                .Where(u => u.Name == req.Name)
+                .Get();
+            
+            if (existeEmail.Models.Any())
                 return BadRequest(new { erro = "Email já cadastrado" });
+            if (exiteNome.Models.Any())
+                return BadRequest(new { erro = "Nome de usuario já cadastrado"});
 
-            var novoUser = new User
+            var existingUsers = await _supabase
+                .From<User>()
+                .Limit(1)
+                .Get();
+            
+            var isFirstUser = !existingUsers.Models.Any();
+            
+            var novoUser = new User 
             {
-                Name = req.Nome,
+                Name = req.Name,
                 Email = req.Email,
                 SenhaHash = HashSenha(req.Senha),
                 Karma = 0,
                 Active = true,
-                CreateTime = DateTime.Now
+                CreateTime = DateTime.Now,
+                Role = isFirstUser ? "admin" : "user",
             };
 
             var response = await _supabase.From<User>().Insert(novoUser);
             var user = response.Models.FirstOrDefault();
-
+            
             return Ok(new
             {
                 mensagem = "Usuário criado com sucesso!",
-                user?.UserId,
+                UserId = user?.UserId,
                 user?.Name,
                 user?.Email
             });
@@ -78,18 +97,48 @@ private string HashSenha(string senha)
             var user = response.Models.FirstOrDefault();
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(req.Senha, user.SenhaHash))
-            return Unauthorized(new { erro = "Email ou senha inválidos" });
+                return Unauthorized(new { erro = "Email ou senha inválidos" });
 
+            var key = Convert.FromBase64String(_configuration["Jwt:Key"]);
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(ClaimTypes.Name, user.Name),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, user.Role ?? "User")
+            };
+
+            var keyByte = Convert.ToByte(key);
+            
+            var creds = new SigningCredentials(
+                new SymmetricSecurityKey(key),
+                SecurityAlgorithms.HmacSha256
+                );
+
+            var token = new JwtSecurityToken(
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(2),
+                signingCredentials: creds
+                );
+            
+            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+            
             if (!user.Active)
                 return Unauthorized(new { erro = "Usuário banido" });
 
             return Ok(new
             {
                 mensagem = "Login realizado com sucesso!",
-                user.UserId,
-                user.Name,
-                user.Email,
-                user.Karma
+                token = tokenString,    
+                user = new
+                {
+                    user.UserId,
+                    user.Name,
+                    user.Email,
+                    user.Karma,
+                    user.Role
+                }
             });
         }
         catch (Exception ex)
@@ -124,15 +173,15 @@ private string HashSenha(string senha)
         }
     }
 
-    // GET /api/users/1 — busca por ID
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(int id)
+    // GET /api/users/1 — busca por nome
+    [HttpGet("{name}")]
+    public async Task<IActionResult> GetById(string name)
     {
         try
         {
             var response = await _supabase
                 .From<User>()
-                .Where(u => u.UserId == id)
+                .Where(u => u.Name == name)
                 .Get();
 
             var user = response.Models.FirstOrDefault();
@@ -140,7 +189,7 @@ private string HashSenha(string senha)
             if (user == null)
                 return NotFound(new { erro = "Usuário não encontrado" });
 
-            return Ok(new
+            return Ok(new 
             {
                 user.UserId,
                 user.Name,
@@ -172,8 +221,8 @@ private string HashSenha(string senha)
             if (user == null)
                 return NotFound(new { erro = "Usuário não encontrado" });
 
-            if (!string.IsNullOrEmpty(req.Nome))
-                user.Name = req.Nome;
+            if (!string.IsNullOrEmpty(req.Name))
+                user.Name = req.Name;
 
             if (!string.IsNullOrEmpty(req.Senha))
                 user.SenhaHash = HashSenha(req.Senha);
@@ -193,6 +242,6 @@ private string HashSenha(string senha)
 }
 
 // Classes auxiliares para receber dados do body
-public record RegisterRequest(string Nome, string Email, string Senha);
-public record LoginRequest(string Email, string Senha);
-public record UpdateRequest(string? Nome, string? Senha);
+public record RegisterRequest(string? Name, string? Email, string? Senha);
+public record LoginRequest(string? Email, string? Senha);
+public record UpdateRequest(string? Name, string? Senha);

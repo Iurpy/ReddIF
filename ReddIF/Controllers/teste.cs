@@ -19,9 +19,6 @@ public class TesteController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Testar()
     {
-        
-        
-        
         try
         {
             var response = await _supabase
