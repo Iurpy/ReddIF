@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Cryptography;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -12,7 +13,19 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("PermitirFrontend", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:5062", "http://localhost:3000")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+}); 
+
 var keyBytes = RandomNumberGenerator.GetBytes(32);
+
 
 builder.Services.AddAuthentication(options =>
     {
@@ -55,6 +68,7 @@ if (app.Environment.IsDevelopment())
 } 
 
 app.UseHttpsRedirection();
+app.UseCors("PermitirFrontend");
 app.UseAuthorization();
 app.UseAuthentication();
 app.MapControllers();

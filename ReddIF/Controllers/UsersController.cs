@@ -1,10 +1,10 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using ReddIF.Models;
 using Supabase;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel;
-using Microsoft.IdentityModel.Tokens;
 
 namespace ReddIF.Controllers;
 
@@ -20,11 +20,11 @@ public class UsersController : ControllerBase
         _supabase = supabase;
         _configuration = configuration;
     }
-    
-private string HashSenha(string senha)
-{
-    return BCrypt.Net.BCrypt.HashPassword(senha);
-}
+
+    private string HashSenha(string senha)
+    {
+        return BCrypt.Net.BCrypt.HashPassword(senha);
+    }
 
     // POST /api/users/register — cria conta
     [HttpPost("register")]
@@ -32,34 +32,50 @@ private string HashSenha(string senha)
     {
         try
         {
-            // Verifica se email já existe
+            if (req == null)
+                return BadRequest(new { erro = "Dados inválidos." });
+
+            if (string.IsNullOrWhiteSpace(req.Name))
+                return BadRequest(new { erro = "Nome é obrigatório." });
+
+            if (string.IsNullOrWhiteSpace(req.Email))
+                return BadRequest(new { erro = "Email é obrigatório." });
+
+            if (string.IsNullOrWhiteSpace(req.Senha))
+                return BadRequest(new { erro = "Senha é obrigatória." });
+
+            var name = req.Name.Trim();
+            var email = req.Email.Trim();
+            var senha = req.Senha;
+
             var existeEmail = await _supabase
                 .From<User>()
-                .Where(u => u.Email == req.Email)
+                .Where(u => u.Email == email)
                 .Get();
-            
-            var exiteNome = await _supabase
+
+            var existeNome = await _supabase
                 .From<User>()
-                .Where(u => u.Name == req.Name)
+                .Where(u => u.Name == name)
                 .Get();
-            
+
             if (existeEmail.Models.Any())
                 return BadRequest(new { erro = "Email já cadastrado" });
-            if (exiteNome.Models.Any())
-                return BadRequest(new { erro = "Nome de usuario já cadastrado"});
+
+            if (existeNome.Models.Any())
+                return BadRequest(new { erro = "Nome de usuário já cadastrado" });
 
             var existingUsers = await _supabase
                 .From<User>()
                 .Limit(1)
                 .Get();
-            
+
             var isFirstUser = !existingUsers.Models.Any();
-            
-            var novoUser = new User 
+
+            var novoUser = new User
             {
-                Name = req.Name,
-                Email = req.Email,
-                SenhaHash = HashSenha(req.Senha),
+                Name = name,
+                Email = email,
+                SenhaHash = HashSenha(senha),
                 Karma = 0,
                 Active = true,
                 CreateTime = DateTime.Now,
@@ -68,7 +84,7 @@ private string HashSenha(string senha)
 
             var response = await _supabase.From<User>().Insert(novoUser);
             var user = response.Models.FirstOrDefault();
-            
+
             return Ok(new
             {
                 mensagem = "Usuário criado com sucesso!",
@@ -89,48 +105,74 @@ private string HashSenha(string senha)
     {
         try
         {
+            if (req == null)
+                return BadRequest(new { erro = "Dados inválidos." });
+
+            if (string.IsNullOrWhiteSpace(req.Email))
+                return BadRequest(new { erro = "Email é obrigatório." });
+
+            if (string.IsNullOrWhiteSpace(req.Senha))
+                return BadRequest(new { erro = "Senha é obrigatória." });
+
+            var email = req.Email.Trim();
+            var senha = req.Senha;
+
             var response = await _supabase
                 .From<User>()
-                .Where(u => u.Email == req.Email)
+                .Where(u => u.Email == email)
                 .Get();
 
             var user = response.Models.FirstOrDefault();
 
-            if (user == null || !BCrypt.Net.BCrypt.Verify(req.Senha, user.SenhaHash))
+            if (user == null)
                 return Unauthorized(new { erro = "Email ou senha inválidos" });
 
-            var key = Convert.FromBase64String(_configuration["Jwt:Key"]);
+            if (string.IsNullOrWhiteSpace(user.SenhaHash))
+                return Unauthorized(new { erro = "Email ou senha inválidos" });
+
+            var senhaCorreta = BCrypt.Net.BCrypt.Verify(senha, user.SenhaHash);
+
+            if (!senhaCorreta)
+                return Unauthorized(new { erro = "Email ou senha inválidos" });
+
+            if (!user.Active)
+                return Unauthorized(new { erro = "Usuário banido" });
+
+            var jwtKey = _configuration["Jwt:Key"];
+
+            if (string.IsNullOrWhiteSpace(jwtKey))
+                return StatusCode(500, new { erro = "Chave JWT não configurada." });
+
+            var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
+
+            if (keyBytes.Length < 16)
+                return StatusCode(500, new { erro = "A chave JWT precisa ter pelo menos 16 caracteres." });
 
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-                new Claim(ClaimTypes.Name, user.Name),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role ?? "User")
+                new Claim(ClaimTypes.Name, user.Name ?? ""),
+                new Claim(ClaimTypes.Email, user.Email ?? ""),
+                new Claim(ClaimTypes.Role, user.Role ?? "user")
             };
 
-            var keyByte = Convert.ToByte(key);
-            
             var creds = new SigningCredentials(
-                new SymmetricSecurityKey(key),
+                new SymmetricSecurityKey(keyBytes),
                 SecurityAlgorithms.HmacSha256
-                );
+            );
 
             var token = new JwtSecurityToken(
                 claims: claims,
                 expires: DateTime.UtcNow.AddHours(2),
                 signingCredentials: creds
-                );
-            
+            );
+
             var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-            
-            if (!user.Active)
-                return Unauthorized(new { erro = "Usuário banido" });
 
             return Ok(new
             {
                 mensagem = "Login realizado com sucesso!",
-                token = tokenString,    
+                token = tokenString,
                 user = new
                 {
                     user.UserId,
@@ -173,9 +215,9 @@ private string HashSenha(string senha)
         }
     }
 
-    // GET /api/users/1 — busca por nome
+    // GET /api/users/{name} — busca por nome
     [HttpGet("{name}")]
-    public async Task<IActionResult> GetById(string name)
+    public async Task<IActionResult> GetByName(string name)
     {
         try
         {
@@ -189,7 +231,7 @@ private string HashSenha(string senha)
             if (user == null)
                 return NotFound(new { erro = "Usuário não encontrado" });
 
-            return Ok(new 
+            return Ok(new
             {
                 user.UserId,
                 user.Name,
@@ -205,12 +247,15 @@ private string HashSenha(string senha)
         }
     }
 
-    // PUT /api/users/1 — edita perfil
+    // PUT /api/users/{id} — edita perfil
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateRequest req)
     {
         try
         {
+            if (req == null)
+                return BadRequest(new { erro = "Dados inválidos." });
+
             var response = await _supabase
                 .From<User>()
                 .Where(u => u.UserId == id)
@@ -221,10 +266,10 @@ private string HashSenha(string senha)
             if (user == null)
                 return NotFound(new { erro = "Usuário não encontrado" });
 
-            if (!string.IsNullOrEmpty(req.Name))
-                user.Name = req.Name;
+            if (!string.IsNullOrWhiteSpace(req.Name))
+                user.Name = req.Name.Trim();
 
-            if (!string.IsNullOrEmpty(req.Senha))
+            if (!string.IsNullOrWhiteSpace(req.Senha))
                 user.SenhaHash = HashSenha(req.Senha);
 
             await _supabase.From<User>().Update(user);
@@ -236,9 +281,6 @@ private string HashSenha(string senha)
             return StatusCode(500, new { erro = ex.Message });
         }
     }
-
-    // DELETE /api/users/1 — desativa usuário (ban)
-   
 }
 
 // Classes auxiliares para receber dados do body
