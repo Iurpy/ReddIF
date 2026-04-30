@@ -23,7 +23,6 @@ public class Post: BaseModel
     [Column("posttime")]
     public DateTime PostTime { get; set; }= DateTime.Now;
     
-    public required User User { get; set; }
 }
 
 //falta colocar votos

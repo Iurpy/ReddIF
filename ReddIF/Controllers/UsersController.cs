@@ -5,6 +5,7 @@ using Supabase;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel;
 using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace ReddIF.Controllers;
 
@@ -99,7 +100,7 @@ private string HashSenha(string senha)
             if (user == null || !BCrypt.Net.BCrypt.Verify(req.Senha, user.SenhaHash))
                 return Unauthorized(new { erro = "Email ou senha inválidos" });
 
-            var key = Convert.FromBase64String(_configuration["Jwt:Key"]);
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
 
             var claims = new List<Claim>
             {
@@ -108,8 +109,7 @@ private string HashSenha(string senha)
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, user.Role ?? "User")
             };
-
-            var keyByte = Convert.ToByte(key);
+            
             
             var creds = new SigningCredentials(
                 new SymmetricSecurityKey(key),
