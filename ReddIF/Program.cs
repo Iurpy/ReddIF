@@ -2,7 +2,7 @@ using Scalar.AspNetCore;
 using Supabase;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using System.Security.Cryptography;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +12,7 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-var keyBytes = RandomNumberGenerator.GetBytes(32);
+var keyBytes = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!);
 
 builder.Services.AddAuthentication(options =>
     {
@@ -67,8 +67,8 @@ if (app.Environment.IsDevelopment())
 } 
 
 app.UseHttpsRedirection();
-app.UseAuthorization();
-app.UseAuthentication();
-app.MapControllers();
 app.UseCors("AllowFrontend");
+app.UseAuthentication(); 
+app.UseAuthorization();
+app.MapControllers();
 app.Run();
