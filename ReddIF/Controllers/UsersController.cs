@@ -100,7 +100,7 @@ private string HashSenha(string senha)
             if (user == null || !BCrypt.Net.BCrypt.Verify(req.Senha, user.SenhaHash))
                 return Unauthorized(new { erro = "Email ou senha inválidos" });
 
-            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!);
 
             var claims = new List<Claim>
             {
