@@ -96,7 +96,11 @@ public class CommunitiesController : ControllerBase
         }
     }
 
-
+    [HttpGet("{communityId:int}")]
+    public IActionResult GetCommunity(int communityId)
+    {
+        return Ok($"Comunidade {communityId}");
+    }
 
     // GET /api/communities/{nome} — Busca comunidade por nome
     [HttpGet("{nome}")]

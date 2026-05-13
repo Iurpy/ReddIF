@@ -5,7 +5,7 @@ using Supabase;
 namespace ReddIF.Controllers;
 
 [ApiController]
-[Route("posts")]
+[Route("api/communities/{communityId:int}/posts")]
 public class PostsController: ControllerBase
 {
     private readonly Client _supabase;
@@ -16,29 +16,34 @@ public class PostsController: ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> PostPost([FromBody] PostForm req)
+    public async Task<IActionResult> CreatePost(
+        [FromRoute] int communityId,
+        [FromBody] PostForm req)
     {
+    var post = new Post
+    {
+        Title = req.Title,
+        Content = req.Content,
+        CommunityId = communityId
+    };
 
-        var novoPost = new Post
-        {
-            Title = req.Title,
-            Content = req.Content,
-            UserAutorId = 16//tem q pegar o id pelo token, ainda n sei fzr :(
-        };
+    var response = await _supabase.From<Post>().Insert(post);
+    if (response.Models == null || !response.Models.Any())    {
+        return BadRequest( new { error = "Erro ao criar post" });
+    }   
+    return Ok(post);
+}
 
-        var response = await _supabase.From<Post>().Insert(novoPost);
-        var post = response.Models.FirstOrDefault();
-        
-        return Ok(new
-        {
-            mensagem = "Post criado com sucesso",
-            post.Title,
-            post.Content
-        });
+[HttpGet]
+public async Task<IActionResult> GetPosts(int communityId)
+{
+    var response = await _supabase
+        .From<Post>()
+        .Where(p => p.CommunityId == communityId)
+        .Get();
 
-
-    }
-
+    return Ok(response.Models);
+}
 
     public record PostForm(string Title, string Content);
 }
