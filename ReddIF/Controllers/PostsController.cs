@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using ReddIF.Models;
 using Supabase;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ReddIF.Controllers;
 
@@ -15,23 +17,41 @@ public class PostsController: ControllerBase
         _supabase = supabase;
     }
 
-    [HttpPost]
-    public async Task<IActionResult> CreatePost(
-        [FromRoute] int communityId,
-        [FromBody] PostForm req)
-    {
-    var post = new Post
-    {
-        Title = req.Title,
-        Content = req.Content,
-        CommunityId = communityId
-    };
+[HttpPost]
+[Authorize]
+public async Task<IActionResult> CreatePost(
+int communityId,
+[FromBody] PostForm req)
+{
+var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-    var response = await _supabase.From<Post>().Insert(post);
-    if (response.Models == null || !response.Models.Any())    {
-        return BadRequest( new { error = "Erro ao criar post" });
-    }   
-    return Ok(post);
+if (userIdStr == null)
+    return Unauthorized();
+
+var userId = int.Parse(userIdStr);
+
+var post = new Post
+{
+    Title = req.Title,
+    Content = req.Content,
+    CommunityId = communityId,
+    UserAutorId = userId
+};
+
+var response = await _supabase
+    .From<Post>()
+    .Insert(post);
+
+var createdPost = response.Models.First();
+
+return Ok(new
+{
+    createdPost.PostId,
+    createdPost.Title,
+    createdPost.Content,
+    createdPost.CommunityId,
+    createdPost.UserAutorId
+});
 }
 
 [HttpGet]
@@ -46,4 +66,30 @@ public async Task<IActionResult> GetPosts(int communityId)
 }
 
     public record PostForm(string Title, string Content);
+}
+
+[HttpDelete("{postId:int}")]
+public async Task<IActionResult> DeletePost(int postId)
+{
+    var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    if (userIdStr == null) return Unauthorized();
+    var userId = int.Parse(userIdStr);
+
+    var response = await _supabase
+        .From<Post>()
+        .Where(p => p.PostId == postId)
+        .Get();
+
+    var post = response.Models.FirstOrDefault();
+    if (post == null) return NotFound(new { erro = "Post não encontrado" });
+
+    if (post.UserAutorId != userId)
+        return Forbid();
+
+    await _supabase
+        .From<Post>()
+        .Where(p => p.PostId == postId)
+        .Delete();
+
+    return Ok(new { message = "Post deletado com sucesso" });
 }
