@@ -105,14 +105,14 @@ public async Task<ActionResult<Community>> GetCommunity(int communityId)
     return Ok(community);
 }
 
-[HttpGet("{Name}")]
-public async Task<IActionResult> GetByName(string Name)
+[HttpGet("{name}")]
+public async Task<IActionResult> GetByName(string name)
 {
     try
     {
         var response = await _supabase
             .From<Community>()
-            .Where(c => c.Name == Name)
+            .Where(c => c.Name == name)
             .Get();
 
         var community = response.Models.FirstOrDefault();
@@ -170,7 +170,8 @@ public async Task<IActionResult> Update(int id, [FromBody] UpdateCommunityForm r
             community.Description = req.Description;
 
         await _supabase
-        .From<Community>().Update(community);
+            .From<Community>()
+            .Update(community);
 
         return Ok(new { message = "Comunidade atualizada com sucesso!" });
     }
