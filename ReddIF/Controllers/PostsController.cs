@@ -63,10 +63,9 @@ public async Task<IActionResult> GetPosts(int communityId)
         .Get();
 
     return Ok(response.Models);
+
 }
 
-    public record PostForm(string Title, string Content);
-}
 
 [HttpDelete("{postId:int}")]
 public async Task<IActionResult> DeletePost(int postId)
@@ -92,4 +91,7 @@ public async Task<IActionResult> DeletePost(int postId)
         .Delete();
 
     return Ok(new { message = "Post deletado com sucesso" });
+}
+
+    public record PostForm(string Title, string Content);
 }
