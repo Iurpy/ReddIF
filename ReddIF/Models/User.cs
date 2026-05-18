@@ -5,7 +5,7 @@ using Supabase.Postgrest.Models;
 
 namespace ReddIF.Models;
 
-[Table("usuario")]
+[Table("users")]
 public class User: BaseModel
 {
     /*
@@ -16,17 +16,17 @@ public class User: BaseModel
     }
     */
     
-    [PrimaryKey("userid",false)]
+    [PrimaryKey("user_id",false)]
     public int UserId { get; set; }
     
-    [Column("nome")]
+    [Column("name")]
     public string Name { get; set; } = string.Empty;
     
     [Column("email")]
     public string Email { get; set; } = string.Empty;
     
-    [Column("password")]
-    public string SenhaHash { get; set; } = string.Empty;
+    [Column("password_hash")]
+    public string PasswordHash { get; set; } = string.Empty;
 
     [Column("karma")] 
     public int Karma { get; set; }
@@ -34,7 +34,7 @@ public class User: BaseModel
     [Column("active")]
     public bool Active { get; set; } = true;
 
-    [Column("criadoem")]
+    [Column("created_at")]
     public DateTime CreateTime { get; set; } = DateTime.Now;
 
     [Column("role")] public string Role { get; set; } = "user";

@@ -3,11 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using ReddIF.Models;
 using Supabase;
 using System.Security.Claims;
+using System.ComponentModel.DataAnnotations;
 
 namespace ReddIF.Controllers;
 
 [ApiController]
-[Route("api/communities")]
+[Route("api/comunidades")]
 public class CommunitiesController : ControllerBase
 {
     private readonly Client _supabase;
@@ -16,205 +17,209 @@ public class CommunitiesController : ControllerBase
     {
         _supabase = supabase;
     }
-
-
-    // [Authorize] = Precisa de autenticação. A criação É permitida a qualquer usuário autenticado
-    // Edição e exclusão são restritas ao proprietário da comunidade ou administrador
-
-
-    // POST /api/communities — Cria comunidade
-    [HttpPost]
-    [Authorize]
-    public async Task<IActionResult> Create([FromBody] CommunityForm req)
+ 
+[HttpPost]
+[Authorize]
+public async Task<IActionResult> Create([FromBody] CommunityForm req)
+{
+    try
     {
-        try
+        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (userIdStr == null) return Unauthorized();
+        
+        var userId = int.Parse(userIdStr);
+
+        var NameExists = await _supabase
+            .From<Community>()
+            .Where(c => c.Name == req.Name)
+            .Get();
+
+        if (NameExists.Models.Any())
+            return BadRequest(new { erro = "Já existe uma comunidade com esse nome" });    
+        
+        var newCommunity = new Community
         {
-            // Pega o id do usuário logado pelo token
-            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdStr == null) return Unauthorized();
-            var userId = int.Parse(userIdStr);
+            Name = req.Name,
+            Description = req.Description ?? string.Empty,
+            OwnerId = userId,
+            CreatedAt = DateTime.Now
+        };
 
-            var existe = await _supabase
-                .From<Community>()
-                .Where(c => c.Nome == req.Nome)
-                .Get();
+        var response = await _supabase
+            .From<Community>()
+            .Insert(newCommunity);
+        
+        var community = response.Models.FirstOrDefault();
 
-            if (existe.Models.Any())
-                return BadRequest(new { erro = "Já existe uma comunidade com esse nome" });
-
-
-            
-             // cria a nova comunidade com o id do usuário logado como dono
-            var novaComunidade = new Community
-            {
-                Nome = req.Nome,
-                Description = req.Description ?? string.Empty,
-                OwnerId = userId,
-                CreateTime = DateTime.Now
-            };
-
-            var response = await _supabase.From<Community>().Insert(novaComunidade);
-            var comunidade = response.Models.FirstOrDefault();
-
-            return Ok(new
-            {
-                mensagem = "Comunidade criada com sucesso!",
-                comunidade?.CommunityId,
-                comunidade?.Nome,
-                comunidade?.Description
-            });
-        }
-        catch (Exception ex)
+        return Ok(new
         {
-            return StatusCode(500, new { erro = ex.Message });
-        }
+            message = "Comunidade criada com sucesso!",
+            community?.CommunityId,
+            community?.Name,
+            community?.Description
+        });
     }
-
-
-    // GET /api/communities — Lista todas comunidades
-    [HttpGet]
-    public async Task<IActionResult> GetAll()
+    
+    catch (Exception ex)
     {
-        try
-        {
-            var response = await _supabase.From<Community>().Get();
-
-            var comunidades = response.Models.Select(c => new
-            {
-                c.CommunityId,
-                c.Nome,
-                c.Description,
-                c.OwnerId,
-                c.CreateTime
-            });
-
-            return Ok(new { total = comunidades.Count(), comunidades });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { erro = ex.Message });
-        }
+        return StatusCode(500, new { erro = ex.Message });
     }
-
-    [HttpGet("{communityId:int}")]
-    public IActionResult GetCommunity(int communityId)
+}
+   
+[HttpGet]
+public async Task<IActionResult> GetAll()
+{
+    try
     {
-        return Ok($"Comunidade {communityId}");
+        var response = await _supabase.From<Community>().Get();
+
+        var communities = response.Models.Select(c => new
+        {
+            c.CommunityId,
+            c.Name,
+            c.Description,
+            c.OwnerId,
+            c.CreatedAt
+        });
+
+        return Ok(new { total = communities.Count(), communities });
     }
-
-    // GET /api/communities/{nome} — Busca comunidade por nome
-    [HttpGet("{nome}")]
-    public async Task<IActionResult> GetByNome(string nome)
+    
+    catch (Exception ex)
     {
-        try
-        {
-            var response = await _supabase
-                .From<Community>()
-                .Where(c => c.Nome == nome)
-                .Get();
-
-            var comunidade = response.Models.FirstOrDefault();
-
-            if (comunidade == null)
-                return NotFound(new { erro = "Comunidade não encontrada" });
-
-            return Ok(new
-            {
-                comunidade.CommunityId,
-                comunidade.Nome,
-                comunidade.Description,
-                comunidade.OwnerId,
-                comunidade.CreateTime
-            });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { erro = ex.Message });
-        }
-    }
-
-
-
-    // PUT /api/communities/{id} — Edita uma comunidade
-    [HttpPut("{id}")]
-    [Authorize]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateCommunityForm req)
-    {
-        try
-        {
-            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-            if (userIdStr == null) return Unauthorized();
-            var userId = int.Parse(userIdStr);
-
-            var response = await _supabase
-                .From<Community>()
-                .Where(c => c.CommunityId == id)
-                .Get();
-
-            var comunidade = response.Models.FirstOrDefault();
-            if (comunidade == null)
-                return NotFound(new { erro = "Comunidade não encontrada" });
-
-
-            if (comunidade.OwnerId != userId && userRole != "admin")
-                return Forbid();
-
-            if (!string.IsNullOrEmpty(req.Nome))
-                comunidade.Nome = req.Nome;
-
-            if (!string.IsNullOrEmpty(req.Description))
-                comunidade.Description = req.Description;
-
-            await _supabase.From<Community>().Update(comunidade);
-
-            return Ok(new { mensagem = "Comunidade atualizada com sucesso!" });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { erro = ex.Message });
-        }
-    }
-
-
-
-    // DELETE /api/communities/{id} — Exclui uma comunidade
-    [HttpDelete("{id}")]
-    [Authorize]
-    public async Task<IActionResult> Delete(int id)
-    {
-        try
-        {
-            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-            if (userIdStr == null) return Unauthorized();
-            var userId = int.Parse(userIdStr);
-
-            var response = await _supabase
-                .From<Community>()
-                .Where(c => c.CommunityId == id)
-                .Get();
-
-            var comunidade = response.Models.FirstOrDefault();
-            if (comunidade == null)
-                return NotFound(new { erro = "Comunidade não encontrada" });
-
-            if (comunidade.OwnerId != userId && userRole != "admin")
-                return Forbid();
-
-            await _supabase
-                .From<Community>()
-                .Where(c => c.CommunityId == id)
-                .Delete();
-
-            return Ok(new { mensagem = "Comunidade deletada com sucesso!" });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { erro = ex.Message });
-        }
+        return StatusCode(500, new { erro = ex.Message });
     }
 }
 
-public record CommunityForm(string Nome, string? Description);
-public record UpdateCommunityForm(string? Nome, string? Description);
+[HttpGet("{communityId:int}")]
+public async Task<ActionResult<Community>> GetCommunity(int communityId)
+{
+    var response = await _supabase
+        .From<Community>()
+        .Where(c => c.CommunityId == communityId)
+        .Get();
+    
+    var community = response.Models.FirstOrDefault();
+    
+    return Ok(community);
+}
+
+[HttpGet("{Name}")]
+public async Task<IActionResult> GetByName(string Name)
+{
+    try
+    {
+        var response = await _supabase
+            .From<Community>()
+            .Where(c => c.Name == Name)
+            .Get();
+
+        var community = response.Models.FirstOrDefault();
+
+        if (community == null)
+            return NotFound(new { erro = "Comunidade não encontrada" });
+
+        return Ok(new
+        {
+            community.CommunityId,
+            community.Name,
+            community.Description,
+            community.OwnerId,
+            community.CreatedAt
+        });
+    }
+    
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { erro = ex.Message });
+    }
+}
+ 
+[HttpPut("{id}")]
+[Authorize]
+public async Task<IActionResult> Update(int id, [FromBody] UpdateCommunityForm req)
+{
+    try
+    {
+        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+        
+        if (userIdStr == null) return Unauthorized();
+        
+        var userId = int.Parse(userIdStr);
+
+        var response = await _supabase
+            .From<Community>()
+            .Where(c => c.CommunityId == id)
+            .Get();
+
+        var community = response.Models.FirstOrDefault();
+        
+        if (community == null)
+            return NotFound(new { erro = "Comunidade não encontrada" });
+
+        if (community.OwnerId != userId && userRole != "admin")
+            return Forbid();
+
+        if (!string.IsNullOrEmpty(req.Name))
+            community.Name = req.Name;
+
+        if (!string.IsNullOrEmpty(req.Description))
+            community.Description = req.Description;
+
+        await _supabase
+        .From<Community>().Update(community);
+
+        return Ok(new { message = "Comunidade atualizada com sucesso!" });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { erro = ex.Message });
+    }
+}
+
+[HttpDelete("{id}")]
+[Authorize]
+public async Task<IActionResult> Delete(int id)
+{
+    try
+    {
+        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+        
+        if (userIdStr == null) return Unauthorized();
+        
+        var userId = int.Parse(userIdStr);
+
+        var response = await _supabase
+            .From<Community>()
+            .Where(c => c.CommunityId == id)
+            .Get();
+
+        var community = response.Models.FirstOrDefault();
+            
+        if (community == null)
+            return NotFound(new { erro = "Comunidade não encontrada" });
+
+        if (community.OwnerId != userId && userRole != "admin")
+            return Forbid();
+
+        await _supabase
+            .From<Community>()
+            .Where(c => c.CommunityId == id)
+            .Delete();
+
+        return Ok(new { message = "Comunidade deletada com sucesso!" });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { erro = ex.Message });
+    }
+}
+}
+
+public record CommunityForm([Required] string Name, [Required] string? Description);
+public record UpdateCommunityForm([Required] string? Name, [Required] string? Description);

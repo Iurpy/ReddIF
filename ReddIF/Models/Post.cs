@@ -20,12 +20,12 @@ public class Post: BaseModel
     [Column("content")]
     public string Content { get; set; } = string.Empty;
 
-    [Column("community_id")]
-    public int CommunityId { get; set; }
-        
+     
     [Column("post_time")]
     public DateTime PostTime { get; set; }= DateTime.Now;
     
+    [Column("community_id")]
+    public int CommunityId { get; set; } 
 }
 
 

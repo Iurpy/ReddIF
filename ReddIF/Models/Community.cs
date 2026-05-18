@@ -3,21 +3,21 @@ using Supabase.Postgrest.Models;
 
 namespace ReddIF.Models;
 
-[Table("community")]
+[Table("communities")]
 public class Community : BaseModel
 {
-    [PrimaryKey("communityid", false)]
+    [PrimaryKey("community_id", false)]
     public int CommunityId { get; set; }
 
-    [Column("dono")]
+    [Column("owner")]
     public int OwnerId { get; set; }
 
-    [Column("nome")]
-    public string Nome { get; set; } = string.Empty;
+    [Column("name")]
+    public string Name { get; set; } = string.Empty;
 
     [Column("description")]
     public string Description { get; set; } = string.Empty;
 
-    [Column("createtime")]
-    public DateTime CreateTime { get; set; } = DateTime.Now;
+    [Column("created_at")]
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
 }
