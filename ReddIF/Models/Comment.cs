@@ -5,7 +5,7 @@ using Supabase.Postgrest.Models;
 
 namespace ReddIF.Models;
 
-    [Table("comments")]
+[Table("comments")]
 public class Comment: BaseModel
 {
     [Column("comment_id")]
@@ -15,16 +15,16 @@ public class Comment: BaseModel
     public int PostId{get; set;}
     
     [Column("author_user_id")]
-    public User User { get; set; } //qm fez o coment
+    public int AuthorUserId { get; set; } //qm fez o coment
     
     [Column("content")]
-    public string CommentContent { get; set; } = string.Empty;
+    public string Content { get; set; } = string.Empty;
 
     [Column("created_at")]
-    public DateTime CommentTime {get; set;} = DateTime.Now;
+    public DateTime CreatedAt {get; set;} = DateTime.Now;
 
     [Column("up_vote")]
-    public int upVote{get; set;}
+    public int UpVote{get; set;}
     
 }
 
