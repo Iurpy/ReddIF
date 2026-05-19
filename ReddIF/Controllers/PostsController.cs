@@ -36,7 +36,8 @@ public async Task<IActionResult> CreatePost(int communityId, [FromBody] PostForm
             Title = req.Title,
             Content = req.Content,
             CommunityId = communityId,
-            UserAutorId = userId
+            UserAuthorId = userId,
+            CreatedAt = DateTime.UtcNow
         };
 
         var response = await _supabase
@@ -45,19 +46,20 @@ public async Task<IActionResult> CreatePost(int communityId, [FromBody] PostForm
 
         var createdPost = response.Models.First();
 
-        return Created($"/api/comunidades/{communityId}/posts/{createdPost.PostId}", new
+        return Ok(new
         {
             createdPost.PostId,
             createdPost.Title,
             createdPost.Content,
             createdPost.CommunityId,
-            createdPost.UserAutorId
+            createdPost.UserAuthorId,
+            createdPost.CreatedAt
         });
     }
 
     catch (Exception ex)
     {
-        return BadRequest(new { erro = ex.Message });
+        return StatusCode(500, new { erro = ex.Message });
     }    
 }
 
@@ -71,7 +73,16 @@ public async Task<IActionResult> GetPosts(int communityId)
             .Where(p => p.CommunityId == communityId)
             .Get();
 
-        return Ok(response.Models);
+        return Ok(response.Models.Select(p => new
+        {
+            p.PostId,
+            p.Title,
+            p.Content,
+            p.CommunityId,
+            p.UserAuthorId,
+            p.CreatedAt 
+        }
+));
     }
 
     catch (Exception ex)
@@ -95,19 +106,19 @@ public async Task<IActionResult> DeletePost(int communityId, int postId)
 
         var response = await _supabase
             .From<Post>()
-            .Where(p => p.PostId == postId)
+            .Where(p => p.PostId == postId && p.CommunityId == communityId)
             .Get();
 
         var post = response.Models.FirstOrDefault();
         
         if (post == null) return NotFound(new { erro = "Post não encontrado" });
 
-        if (post.UserAutorId != userId)
+        if (post.UserAuthorId != userId)
             return Forbid();
 
         await _supabase
             .From<Post>()
-            .Where(p => p.PostId == postId)
+            .Where(p => p.PostId == postId && p.CommunityId == communityId)
             .Delete();
 
         return Ok(new { message = "Post deletado com sucesso" });

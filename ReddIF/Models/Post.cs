@@ -12,7 +12,7 @@ public class Post: BaseModel
     public int PostId { get; set; }
     
     [Column("author_user_id")]
-    public int UserAutorId { get; set; }
+    public int UserAuthorId { get; set; }
 
     [Column("title")]
     public string Title { get; set; } = string.Empty;
@@ -21,8 +21,8 @@ public class Post: BaseModel
     public string Content { get; set; } = string.Empty;
 
      
-    [Column("post_time")]
-    public DateTime PostTime { get; set; }= DateTime.Now;
+    [Column("created_at")]
+    public DateTime CreatedAt { get; set; }= DateTime.Now;
     
     [Column("community_id")]
     public int CommunityId { get; set; } 

@@ -97,19 +97,36 @@ public async Task<IActionResult> GetAll()
 }
 
 [HttpGet("{communityId:int}")]
-public async Task<ActionResult<Community>> GetCommunity(int communityId)
+public async Task<IActionResult> GetCommunity(int communityId)
 {
-    var response = await _supabase
-        .From<Community>()
-        .Where(c => c.CommunityId == communityId)
-        .Get();
-    
-    var community = response.Models.FirstOrDefault();
-    
-    return Ok(community);
+    try
+    {
+        var response = await _supabase
+            .From<Community>()
+            .Where(c => c.CommunityId == communityId)
+            .Get();
+
+        var community = response.Models.FirstOrDefault();
+
+        if (community == null)
+            return NotFound(new { erro = "Comunidade não encontrada" });
+
+        return Ok(new
+        {
+            community.CommunityId,
+            community.Name,
+            community.Description,
+            community.OwnerId,
+            community.CreatedAt
+        });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { erro = ex.Message });
+    }
 }
 
-[HttpGet("{name}")]
+[HttpGet("nome/{name}")]
 public async Task<IActionResult> GetByName(string name)
 {
     try
