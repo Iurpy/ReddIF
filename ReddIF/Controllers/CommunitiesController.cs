@@ -83,7 +83,11 @@ public async Task<IActionResult> GetAll()
             c.CreatedAt
         });
 
-        return Ok(new { total = communities.Count(), communities });
+        return Ok(new 
+        { 
+            total = communities.Count(), 
+            comunidades = communities 
+        });
     }
     
     catch (Exception ex)
