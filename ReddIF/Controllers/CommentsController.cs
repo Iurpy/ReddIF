@@ -93,4 +93,4 @@ public async Task<IActionResult> DeleteComment(int commentId)
 }
 }
 
-public record CommentForm([Required] string Content);
+public record Comment2Form([Required] string Content);
