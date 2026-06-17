@@ -121,6 +121,7 @@ public class PostsController : ControllerBase
             var votes = votesResponse.Models;
 
             var postsDaComunidade = posts
+                .Where(post => post.Active)
                 .OrderByDescending(post => post.CreatedAt)
                 .Select(post =>
                 {
@@ -198,6 +199,7 @@ public class PostsController : ControllerBase
             var votes = votesResponse.Models;
 
             var feed = posts
+                .Where(post => post.Active)
                 .OrderByDescending(post => post.CreatedAt)
                 .Select(post =>
                 {
@@ -449,7 +451,6 @@ public async Task<IActionResult> GetRecentPosts()
         var comments = commentsResponse.Models;
         var votes = votesResponse.Models;
 
-        // últimas 24 horas
         var limite = DateTime.Now.AddHours(-24);
 
         var recentes = posts

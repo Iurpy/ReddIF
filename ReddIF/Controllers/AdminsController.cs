@@ -2,16 +2,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ReddIF.Models;
 using Supabase;
+using System.Security.Claims;
 
 namespace ReddIF.Controllers;
 
 [ApiController]
 [Route("api/admin")]
-<<<<<<< HEAD
-[Authorize]
-=======
 [Authorize(Roles = "admin")]
->>>>>>> bde61456ec030f41881981a97a1350c00cadf4c9
 public class AdminController : ControllerBase
 {
     private readonly Client _supabase;
@@ -21,42 +18,6 @@ public class AdminController : ControllerBase
         _supabase = supabase;
     }
 
-<<<<<<< HEAD
-    private bool UsuarioLogadoEhAdmin()
-    {
-        var loggedUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
-
-        return string.Equals(
-            loggedUserRole,
-            "admin",
-            StringComparison.OrdinalIgnoreCase
-        );
-    }
-
-    private string? ObterIdUsuarioLogado()
-    {
-        return User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    }
-
-    [HttpGet("verificar")]
-    public IActionResult VerificarAdmin()
-    {
-        var loggedUserIdStr = ObterIdUsuarioLogado();
-        var loggedUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
-
-        if (loggedUserIdStr == null)
-        {
-            return Unauthorized(new { erro = "Usuário não autenticado." });
-        }
-
-        return Ok(new
-        {
-            isAdmin = UsuarioLogadoEhAdmin(),
-            role = loggedUserRole
-        });
-    }
-
-=======
     // Lista todos os usuários cadastrados.
     [HttpGet("usuarios")]
     public async Task<IActionResult> GetAllUsers()
@@ -122,30 +83,12 @@ public class AdminController : ControllerBase
     }
 
     // Promove um usuário comum para administrador.
->>>>>>> bde61456ec030f41881981a97a1350c00cadf4c9
     [HttpPut("usuarios/{userId:int}/promover-admin")]
     public async Task<IActionResult> PromoteUserToAdmin(int userId)
     {
         try
         {
-<<<<<<< HEAD
-            var loggedUserIdStr = ObterIdUsuarioLogado();
-
-            if (loggedUserIdStr == null)
-                return Unauthorized(new { erro = "Usuário não autenticado." });
-
-            if (!UsuarioLogadoEhAdmin())
-                return Forbid();
-
-            var userResponse = await _supabase
-                .From<ReddIF.Models.User>()
-                .Where(u => u.UserId == userId)
-                .Get();
-
-            var user = userResponse.Models.FirstOrDefault();
-=======
             var user = await GetUser(userId);
->>>>>>> bde61456ec030f41881981a97a1350c00cadf4c9
 
             if (user == null)
                 return NotFound(new { erro = "Usuário não encontrado." });
@@ -187,32 +130,58 @@ public class AdminController : ControllerBase
         }
     }
 
-<<<<<<< HEAD
-    [HttpPut("usuarios/{userId:int}/banir")]
-    public async Task<IActionResult> BanirUsuario(int userId)
+    // Rebaixa um administrador para usuário comum.
+    [HttpPut("usuarios/{userId:int}/rebaixar-para-usuario")]
+    public async Task<IActionResult> DemoteAdminToUser(int userId)
     {
         try
         {
-            var loggedUserIdStr = ObterIdUsuarioLogado();
+            var loggedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (loggedUserIdStr == null)
-                return Unauthorized(new { erro = "Usuário não autenticado." });
+            if (loggedUserId == userId.ToString())
+                return BadRequest(new { erro = "Você não pode rebaixar a si mesmo." });
 
-            if (!UsuarioLogadoEhAdmin())
-                return Forbid();
+            var user = await GetUser(userId);
 
-            if (int.TryParse(loggedUserIdStr, out var loggedUserId) && loggedUserId == userId)
+            if (user == null)
+                return NotFound(new { erro = "Usuário não encontrado." });
+
+            if (user.Role != "admin")
             {
-                return BadRequest(new { erro = "Você não pode banir a si mesmo." });
+                return Ok(new
+                {
+                    message = "Usuário já é um usuário comum.",
+                    userId = user.UserId,
+                    name = user.Name,
+                    email = user.Email,
+                    role = user.Role
+                });
             }
 
-            var userResponse = await _supabase
-                .From<ReddIF.Models.User>()
-                .Where(u => u.UserId == userId)
-                .Get();
+            user.Role = "user";
 
-            var user = userResponse.Models.FirstOrDefault();
-=======
+            await _supabase
+                .From<User>()
+                .Update(user);
+
+            return Ok(new
+            {
+                message = "Admin rebaixado a usuário comum com sucesso.",
+                userId = user.UserId,
+                name = user.Name,
+                email = user.Email,
+                role = user.Role
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                erro = ex.Message,
+                detalhe = ex.InnerException?.Message
+            });
+        }
+    }
 
     // Desativa um usuário, funcionando como banimento.
     [HttpPut("usuarios/{userId:int}/banir")]
@@ -220,8 +189,12 @@ public class AdminController : ControllerBase
     {
         try
         {
+            var loggedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (loggedUserId == userId.ToString())
+                return BadRequest(new { erro = "Você não pode banir a si mesmo." });
+
             var user = await GetUser(userId);
->>>>>>> bde61456ec030f41881981a97a1350c00cadf4c9
 
             if (user == null)
                 return NotFound(new { erro = "Usuário não encontrado." });
@@ -241,11 +214,7 @@ public class AdminController : ControllerBase
             user.Active = false;
 
             await _supabase
-<<<<<<< HEAD
-                .From<ReddIF.Models.User>()
-=======
                 .From<User>()
->>>>>>> bde61456ec030f41881981a97a1350c00cadf4c9
                 .Update(user);
 
             return Ok(new
@@ -267,40 +236,6 @@ public class AdminController : ControllerBase
         }
     }
 
-<<<<<<< HEAD
-    [HttpDelete("posts/{postId:int}")]
-    public async Task<IActionResult> RemoverPost(int postId)
-    {
-        try
-        {
-            var loggedUserIdStr = ObterIdUsuarioLogado();
-
-            if (loggedUserIdStr == null)
-                return Unauthorized(new { erro = "Usuário não autenticado." });
-
-            if (!UsuarioLogadoEhAdmin())
-                return Forbid();
-
-            var postResponse = await _supabase
-                .From<ReddIF.Models.Post>()
-                .Where(p => p.PostId == postId)
-                .Get();
-
-            var post = postResponse.Models.FirstOrDefault();
-
-            if (post == null)
-                return NotFound(new { erro = "Post não encontrado." });
-
-            await _supabase
-                .From<ReddIF.Models.Post>()
-                .Where(p => p.PostId == postId)
-                .Delete();
-
-            return Ok(new
-            {
-                message = "Post removido com sucesso.",
-                postId = postId
-=======
     // Reativa um usuário banido.
     [HttpPut("usuarios/{userId:int}/desbanir")]
     public async Task<IActionResult> UnbanUser(int userId)
@@ -337,7 +272,6 @@ public class AdminController : ControllerBase
                 name = user.Name,
                 email = user.Email,
                 active = user.Active
->>>>>>> bde61456ec030f41881981a97a1350c00cadf4c9
             });
         }
         catch (Exception ex)
@@ -349,8 +283,6 @@ public class AdminController : ControllerBase
             });
         }
     }
-<<<<<<< HEAD
-=======
 
     // Retorna os dados principais para o dashboard do painel administrativo.
     [HttpGet("dashboard")]
@@ -358,15 +290,9 @@ public class AdminController : ControllerBase
     {
         try
         {
-            var usersResponse = await _supabase
-                .From<User>()
-                .Get();
-            var communitiesResponse = await _supabase
-                .From<Community>()
-                .Get();
-            var postsResponse = await _supabase
-                .From<Post>()
-                .Get();
+            var usersResponse = await _supabase.From<User>().Get();
+            var communitiesResponse = await _supabase.From<Community>().Get();
+            var postsResponse = await _supabase.From<Post>().Get();
 
             var users = usersResponse.Models;
             var communities = communitiesResponse.Models;
@@ -386,6 +312,8 @@ public class AdminController : ControllerBase
                 usersCreatedLast7Days = users.Count(u => u.CreateTime.Date >= last7Days),
                 totalCommunities = communities.Count,
                 totalPosts = posts.Count,
+                totalActivePosts = posts.Count(p => p.Active),
+                totalRemovedPosts = posts.Count(p => !p.Active)
             });
         }
         catch (Exception ex)
@@ -398,18 +326,13 @@ public class AdminController : ControllerBase
         }
     }
 
-    // Remove um post do feed (soft delete).
+    // Remove um post do feed e da comunidade sem apagar do banco.
     [HttpPut("posts/{postId:int}/remover")]
     public async Task<IActionResult> RemovePost(int postId)
     {
         try
         {
-            var postResponse = await _supabase
-                .From<Post>()
-                .Where(p => p.PostId == postId)
-                .Get();
-
-            var post = postResponse.Models.FirstOrDefault();
+            var post = await GetPost(postId);
 
             if (post == null)
                 return NotFound(new { erro = "Post não encontrado." });
@@ -445,6 +368,48 @@ public class AdminController : ControllerBase
         }
     }
 
+    // Restaura um post removido.
+    [HttpPut("posts/{postId:int}/restaurar")]
+    public async Task<IActionResult> RestorePost(int postId)
+    {
+        try
+        {
+            var post = await GetPost(postId);
+
+            if (post == null)
+                return NotFound(new { erro = "Post não encontrado." });
+
+            if (post.Active)
+            {
+                return Ok(new
+                {
+                    message = "O post já está ativo.",
+                    postId = post.PostId
+                });
+            }
+
+            post.Active = true;
+
+            await _supabase
+                .From<Post>()
+                .Update(post);
+
+            return Ok(new
+            {
+                message = "Post restaurado com sucesso.",
+                postId = post.PostId
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                erro = ex.Message,
+                detalhe = ex.InnerException?.Message
+            });
+        }
+    }
+
     // Função auxiliar para buscar um usuário pelo ID.
     private async Task<User?> GetUser(int userId)
     {
@@ -455,5 +420,15 @@ public class AdminController : ControllerBase
 
         return response.Models.FirstOrDefault();
     }
->>>>>>> bde61456ec030f41881981a97a1350c00cadf4c9
+
+    // Função auxiliar para buscar um post pelo ID.
+    private async Task<Post?> GetPost(int postId)
+    {
+        var response = await _supabase
+            .From<Post>()
+            .Where(p => p.PostId == postId)
+            .Get();
+
+        return response.Models.FirstOrDefault();
+    }
 }
