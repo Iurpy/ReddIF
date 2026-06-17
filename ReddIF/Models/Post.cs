@@ -26,6 +26,9 @@ public class Post: BaseModel
     
     [Column("community_id")]
     public int CommunityId { get; set; } 
+
+    [Column("active")]
+    public bool Active { get; set; } = true;
 }
 
 
