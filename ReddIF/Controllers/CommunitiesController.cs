@@ -494,7 +494,56 @@ public async Task<IActionResult> GetMyCommunities()
             return StatusCode(500, new { erro = ex.Message });
         }
     }
+    [HttpGet("sugestoes")]
+    [Authorize]
+    public async Task<IActionResult> GetCommunitySuggestions()
+    {
+        try {
+        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userIdStr == null)
+            return Unauthorized();
+
+        int userId = int.Parse(userIdStr);
+
+        var communitiesResponse = await _supabase
+            .From<Community>()
+            .Get();
+
+        var membershipsResponse = await _supabase
+            .From<CommunityMember>()
+            .Where(cm => cm.UserId == userId)
+            .Get();
+
+        var joinedCommunityIds = membershipsResponse.Models
+            .Select(cm => cm.CommunityId)
+            .ToHashSet();
+
+        var suggestions = communitiesResponse.Models
+            .Where(c => !joinedCommunityIds.Contains(c.CommunityId))
+            .OrderBy(_ => Guid.NewGuid())
+            .Take(5)
+            .Select(c => new
+            {
+                communityId = c.CommunityId,
+                name = c.Name,
+                description = c.Description
+            })
+            .ToList();
+
+        return Ok(suggestions);
+        }    
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                erro = ex.Message,
+                detalhe = ex.InnerException?.Message
+            });
+        }
+    }
 }
+
 
 public record CommunityForm([Required] string Name, [Required] string? Description);
 public record UpdateCommunityForm([Required] string? Name, [Required] string? Description);
