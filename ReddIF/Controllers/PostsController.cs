@@ -31,6 +31,20 @@ public class PostsController : ControllerBase
 
             var userId = int.Parse(userIdStr);
 
+                        var memberResponse = await _supabase
+                        .From<CommunityMember>()
+                        .Where(m => m.CommunityId == communityId)
+                        .Where(m => m.UserId == userId)
+                        .Get();
+
+            if (!memberResponse.Models.Any())
+            {
+                return StatusCode(403, new
+                {
+                    erro = "Você precisa entrar na comunidade para publicar um post."
+                });
+            } 
+
             var post = new Post
             {
                 Title = req.Title,
