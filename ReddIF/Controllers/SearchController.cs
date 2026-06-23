@@ -17,7 +17,6 @@ public class SearchController : ControllerBase
         _supabase = supabase;
     }
 
-    // Retorna sugestões para a barra de pesquisa da Home.
     [HttpGet("suggestions")]
     public async Task<IActionResult> GetSuggestions([FromQuery] string q)
     {
@@ -113,7 +112,6 @@ public class SearchController : ControllerBase
         }
     }
 
-    // Pesquisa usuários pelo nome ou email.
     [HttpGet("usuarios")]
     public async Task<IActionResult> SearchUsers([FromQuery] string q)
     {
@@ -157,7 +155,6 @@ public class SearchController : ControllerBase
         }
     }
 
-    // Pesquisa posts pelo título ou conteúdo.
     [HttpGet("posts")]
     public async Task<IActionResult> SearchPosts([FromQuery] string q)
     {
@@ -203,7 +200,6 @@ public class SearchController : ControllerBase
         }
     }
 
-    // Pesquisa comunidades pelo nome.
     [HttpGet("comunidades")]
     public async Task<IActionResult> SearchCommunities([FromQuery] string q)
     {

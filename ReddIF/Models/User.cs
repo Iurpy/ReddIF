@@ -8,13 +8,6 @@ namespace ReddIF.Models;
 [Table("users")]
 public class User: BaseModel
 {
-    /*
-    public User()
-    {
-        Posts = new Collection<Post>();
-        Communities = new Collection<Community>();
-    }
-    */
     
     [PrimaryKey("user_id",false)]
     public int UserId { get; set; }
@@ -39,10 +32,4 @@ public class User: BaseModel
 
     [Column("role")] public string Role { get; set; } = "user";
 
-/*
-    public ICollection<Post> Posts { get; set; }
-    //isso aqui diz que um usuario pode ter varios posts
-    public ICollection<Community> Communities { get; set; }
-    //pode pertencer a varias comunidades
-*/
 }

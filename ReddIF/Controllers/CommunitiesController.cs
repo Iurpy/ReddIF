@@ -197,73 +197,73 @@ public class CommunitiesController : ControllerBase
     }
 
     [HttpPost("{communityId:int}/entrar")]
-[Authorize]
-public async Task<IActionResult> JoinCommunity(int communityId)
-{
-    try
+    [Authorize]
+    public async Task<IActionResult> JoinCommunity(int communityId)
     {
-        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (userIdStr == null)
-            return Unauthorized(new { erro = "Usuário não autenticado." });
-
-        var userId = int.Parse(userIdStr);
-
-        var communityResponse = await _supabase
-            .From<Community>()
-            .Where(c => c.CommunityId == communityId)
-            .Get();
-
-        var community = communityResponse.Models.FirstOrDefault();
-
-        if (community == null)
-            return NotFound(new { erro = "Comunidade não encontrada." });
-
-        var existingMemberResponse = await _supabase
-            .From<CommunityMember>()
-            .Where(m => m.CommunityId == communityId)
-            .Where(m => m.UserId == userId)
-            .Get();
-
-        if (existingMemberResponse.Models.Any())
+        try
         {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userIdStr == null)
+                return Unauthorized(new { erro = "Usuário não autenticado." });
+
+            var userId = int.Parse(userIdStr);
+
+            var communityResponse = await _supabase
+                .From<Community>()
+                .Where(c => c.CommunityId == communityId)
+                .Get();
+
+            var community = communityResponse.Models.FirstOrDefault();
+
+            if (community == null)
+                return NotFound(new { erro = "Comunidade não encontrada." });
+
+            var existingMemberResponse = await _supabase
+                .From<CommunityMember>()
+                .Where(m => m.CommunityId == communityId)
+                .Where(m => m.UserId == userId)
+                .Get();
+
+            if (existingMemberResponse.Models.Any())
+            {
+                return Ok(new
+                {
+                    message = "Você já participa dessa comunidade.",
+                    communityId,
+                    userId,
+                    isMember = true
+                });
+            }
+
+            var member = new CommunityMember
+            {
+                CommunityId = communityId,
+                UserId = userId,
+                JoinedAt = DateTime.Now
+            };
+
+            var insertResponse = await _supabase
+                .From<CommunityMember>()
+                .Insert(member);
+
             return Ok(new
             {
-                message = "Você já participa dessa comunidade.",
+                message = "Você entrou na comunidade.",
                 communityId,
                 userId,
                 isMember = true
             });
         }
-
-        var member = new CommunityMember
+        catch (Exception ex)
         {
-            CommunityId = communityId,
-            UserId = userId,
-            JoinedAt = DateTime.Now
-        };
-
-        var insertResponse = await _supabase
-            .From<CommunityMember>()
-            .Insert(member);
-
-        return Ok(new
-        {
-            message = "Você entrou na comunidade.",
-            communityId,
-            userId,
-            isMember = true
-        });
+            return StatusCode(500, new
+            {
+                erro = ex.Message,
+                detalhe = ex.InnerException?.Message
+            });
+        }
     }
-    catch (Exception ex)
-    {
-        return StatusCode(500, new
-        {
-            erro = ex.Message,
-            detalhe = ex.InnerException?.Message
-        });
-    }
-}
 
     [HttpDelete("{communityId:int}/sair")]
     [Authorize]
@@ -344,71 +344,71 @@ public async Task<IActionResult> JoinCommunity(int communityId)
     }
 
     [HttpGet("minhas")]
-[Authorize]
-public async Task<IActionResult> GetMyCommunities()
-{
-    try
+    [Authorize]
+    public async Task<IActionResult> GetMyCommunities()
     {
-        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (userIdStr == null)
-            return Unauthorized(new { erro = "Usuário não autenticado." });
-
-        var userId = int.Parse(userIdStr);
-
-        var membersResponse = await _supabase
-            .From<CommunityMember>()
-            .Where(m => m.UserId == userId)
-            .Get();
-
-        var memberships = membersResponse.Models;
-
-        if (!memberships.Any())
+        try
         {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userIdStr == null)
+                return Unauthorized(new { erro = "Usuário não autenticado." });
+
+            var userId = int.Parse(userIdStr);
+
+            var membersResponse = await _supabase
+                .From<CommunityMember>()
+                .Where(m => m.UserId == userId)
+                .Get();
+
+            var memberships = membersResponse.Models;
+
+            if (!memberships.Any())
+            {
+                return Ok(new
+                {
+                    total = 0,
+                    comunidades = new List<object>()
+                });
+            }
+
+            var communitiesResponse = await _supabase
+                .From<Community>()
+                .Get();
+
+            var allCommunities = communitiesResponse.Models;
+
+            var myCommunityIds = memberships
+                .Select(m => m.CommunityId)
+                .ToList();
+
+            var myCommunities = allCommunities
+                .Where(c => myCommunityIds.Contains(c.CommunityId))
+                .Select(c => new
+                {
+                    communityId = c.CommunityId,
+                    name = c.Name,
+                    description = c.Description,
+                    ownerId = c.OwnerId,
+                    createdAt = c.CreatedAt
+                })
+                .ToList();
+
             return Ok(new
             {
-                total = 0,
-                comunidades = new List<object>()
+                total = myCommunities.Count,
+                comunidades = myCommunities
             });
         }
-
-        var communitiesResponse = await _supabase
-            .From<Community>()
-            .Get();
-
-        var allCommunities = communitiesResponse.Models;
-
-        var myCommunityIds = memberships
-            .Select(m => m.CommunityId)
-            .ToList();
-
-        var myCommunities = allCommunities
-            .Where(c => myCommunityIds.Contains(c.CommunityId))
-            .Select(c => new
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
             {
-                communityId = c.CommunityId,
-                name = c.Name,
-                description = c.Description,
-                ownerId = c.OwnerId,
-                createdAt = c.CreatedAt
-            })
-            .ToList();
-
-        return Ok(new
-        {
-            total = myCommunities.Count,
-            comunidades = myCommunities
-        });
+                erro = ex.Message,
+                detalhe = ex.InnerException?.Message
+            });
+        }
     }
-    catch (Exception ex)
-    {
-        return StatusCode(500, new
-        {
-            erro = ex.Message,
-            detalhe = ex.InnerException?.Message
-        });
-    }
-}
 
     [HttpPut("{id}")]
     [Authorize]
@@ -494,6 +494,7 @@ public async Task<IActionResult> GetMyCommunities()
             return StatusCode(500, new { erro = ex.Message });
         }
     }
+    
     [HttpGet("sugestoes")]
     [Authorize]
     public async Task<IActionResult> GetCommunitySuggestions()
@@ -533,6 +534,54 @@ public async Task<IActionResult> GetMyCommunities()
 
         return Ok(suggestions);
         }    
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                erro = ex.Message,
+                detalhe = ex.InnerException?.Message
+            });
+        }
+    }
+
+    [HttpGet("{communityId:int}/membros")]
+    [Authorize]
+    public async Task<IActionResult> GetCommunityMembers(int communityId)
+    {
+        try
+        {
+            var membersResponse = await _supabase
+                .From<CommunityMember>()
+                .Where(m => m.CommunityId == communityId)
+                .Get();
+
+            var usersResponse = await _supabase
+                .From<ReddIF.Models.User>()
+                .Get();
+
+            var members = membersResponse.Models;
+            var users = usersResponse.Models;
+
+            var result = members
+                .OrderByDescending(m => m.JoinedAt)
+                .Select(m =>
+                {
+                    var user = users.FirstOrDefault(u => u.UserId == m.UserId);
+
+                    return new
+                    {
+                        userId = m.UserId,
+                        name = user?.Name ?? "Usuário",
+                        email = user?.Email ?? "",
+                        karma = user?.Karma ?? 0,
+                        role = user?.Role ?? "user",
+                        joinedAt = m.JoinedAt
+                    };
+                })
+                .ToList();
+
+            return Ok(result);
+        }
         catch (Exception ex)
         {
             return StatusCode(500, new
