@@ -29,6 +29,9 @@ public class Post: BaseModel
 
     [Column("active")]
     public bool Active { get; set; } = true;
+
+    [Column("image_url")]
+    public string? ImageUrl { get; set; } = null;
 }
 
 

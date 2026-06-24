@@ -20,7 +20,7 @@ public class PostsController : ControllerBase
 
     [HttpPost]
     [Authorize]
-    public async Task<IActionResult> CreatePost(int communityId, [FromBody] PostForm req)
+    public async Task<IActionResult> CreatePost(int communityId, [FromForm] PostForm req)
     {
         try
         {
@@ -31,11 +31,11 @@ public class PostsController : ControllerBase
 
             var userId = int.Parse(userIdStr);
 
-                        var memberResponse = await _supabase
-                        .From<CommunityMember>()
-                        .Where(m => m.CommunityId == communityId)
-                        .Where(m => m.UserId == userId)
-                        .Get();
+            var memberResponse = await _supabase
+                .From<CommunityMember>()
+                .Where(m => m.CommunityId == communityId)
+                .Where(m => m.UserId == userId)
+                .Get();
 
             if (!memberResponse.Models.Any())
             {
@@ -43,7 +43,52 @@ public class PostsController : ControllerBase
                 {
                     erro = "Você precisa entrar na comunidade para publicar um post."
                 });
-            } 
+            }
+
+            string? imageUrl = null;
+
+            if (req.Image != null)
+            {
+                if (req.Image.Length > 5 * 1024 * 1024)
+                {
+                    return BadRequest(new
+                    {
+                        erro = "A imagem deve ter no máximo 5 MB."
+                    });
+                }
+
+                var tiposPermitidos = new[]
+                {
+                    "image/jpeg",
+                    "image/png",
+                    "image/webp"
+                };
+
+                if (!tiposPermitidos.Contains(req.Image.ContentType))
+                {
+                    return BadRequest(new
+                    {
+                        erro = "Formato de imagem inválido. Use JPG, PNG ou WEBP."
+                    });
+                }
+
+                var extensao = Path.GetExtension(req.Image.FileName);
+                var fileName = $"{Guid.NewGuid()}{extensao}";
+                var filePath = $"posts/{fileName}";
+
+                using var memoryStream = new MemoryStream();
+                await req.Image.CopyToAsync(memoryStream);
+
+                var bytes = memoryStream.ToArray();
+
+                await _supabase.Storage
+                    .From("post-images")
+                    .Upload(bytes, filePath);
+
+                imageUrl = _supabase.Storage
+                    .From("post-images")
+                    .GetPublicUrl(filePath);
+            }
 
             var post = new Post
             {
@@ -51,7 +96,8 @@ public class PostsController : ControllerBase
                 Content = req.Content,
                 CommunityId = communityId,
                 UserAuthorId = userId,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.Now,
+                ImageUrl = imageUrl
             };
 
             var response = await _supabase
@@ -82,6 +128,7 @@ public class PostsController : ControllerBase
                 postId = createdPost.PostId,
                 title = createdPost.Title,
                 content = createdPost.Content,
+                imageUrl = createdPost.ImageUrl,
                 communityId = createdPost.CommunityId,
                 communityName = community != null ? community.Name : "Comunidade",
                 userAuthorId = createdPost.UserAuthorId,
@@ -157,6 +204,7 @@ public class PostsController : ControllerBase
                         postId = post.PostId,
                         title = post.Title,
                         content = post.Content,
+                        imageUrl = post.ImageUrl,
                         communityId = post.CommunityId,
                         communityName = community != null ? community.Name : "Comunidade",
                         userAuthorId = post.UserAuthorId,
@@ -235,6 +283,7 @@ public class PostsController : ControllerBase
                         postId = post.PostId,
                         title = post.Title,
                         content = post.Content,
+                        imageUrl = post.ImageUrl,
                         communityId = post.CommunityId,
                         communityName = community != null ? community.Name : "Comunidade",
                         userAuthorId = post.UserAuthorId,
@@ -258,8 +307,7 @@ public class PostsController : ControllerBase
             });
         }
     }
-
-    [HttpGet("~/api/posts/popular")]
+        [HttpGet("~/api/posts/popular")]
     public async Task<IActionResult> GetPopularPosts()
     {
         try
@@ -290,6 +338,7 @@ public class PostsController : ControllerBase
                         postId = post.PostId,
                         title = post.Title,
                         content = post.Content,
+                        imageUrl = post.ImageUrl,
                         communityId = post.CommunityId,
                         communityName = community != null ? community.Name : "Comunidade",
                         userAuthorId = post.UserAuthorId,
@@ -307,10 +356,13 @@ public class PostsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { erro = ex.Message, detalhe = ex.InnerException?.Message });
+            return StatusCode(500, new
+            {
+                erro = ex.Message,
+                detalhe = ex.InnerException?.Message
+            });
         }
     }
-
 
     [HttpGet("{postId:int}")]
     public async Task<IActionResult> GetPostById(int communityId, int postId)
@@ -354,14 +406,14 @@ public class PostsController : ControllerBase
                 .Where(v => v.PostId == postId)
                 .Get();
 
-            var votesCount = votesResponse.Models
-                .Sum(v => v.VoteValue);
+            var votesCount = votesResponse.Models.Sum(v => v.VoteValue);
 
             return Ok(new
             {
                 postId = post.PostId,
                 title = post.Title,
                 content = post.Content,
+                imageUrl = post.ImageUrl,
                 communityId = post.CommunityId,
                 communityName = community != null ? community.Name : "Comunidade",
                 userAuthorId = post.UserAuthorId,
@@ -458,8 +510,7 @@ public class PostsController : ControllerBase
                 .OrderByDescending(comment => comment.CreatedAt)
                 .Select(comment =>
                 {
-                    var author = users
-                        .FirstOrDefault(u => u.UserId == comment.AuthorUserId);
+                    var author = users.FirstOrDefault(u => u.UserId == comment.AuthorUserId);
 
                     return new
                     {
@@ -485,32 +536,16 @@ public class PostsController : ControllerBase
         }
     }
 
-
-
     [HttpGet("~/api/posts/recentes")]
     public async Task<IActionResult> GetRecentPosts()
     {
         try
         {
-            var postsResponse = await _supabase
-                .From<Post>()
-                .Get();
-
-            var communitiesResponse = await _supabase
-                .From<Community>()
-                .Get();
-
-            var usersResponse = await _supabase
-                .From<ReddIF.Models.User>()
-                .Get();
-
-            var commentsResponse = await _supabase
-                .From<Comment>()
-                .Get();
-
-            var votesResponse = await _supabase
-                .From<PostVote>()
-                .Get();
+            var postsResponse = await _supabase.From<Post>().Get();
+            var communitiesResponse = await _supabase.From<Community>().Get();
+            var usersResponse = await _supabase.From<ReddIF.Models.User>().Get();
+            var commentsResponse = await _supabase.From<Comment>().Get();
+            var votesResponse = await _supabase.From<PostVote>().Get();
 
             var posts = postsResponse.Models;
             var communities = communitiesResponse.Models;
@@ -525,24 +560,17 @@ public class PostsController : ControllerBase
                 .OrderByDescending(post => post.CreatedAt)
                 .Select(post =>
                 {
-                    var community = communities
-                        .FirstOrDefault(c => c.CommunityId == post.CommunityId);
-
-                    var author = users
-                        .FirstOrDefault(u => u.UserId == post.UserAuthorId);
-
-                    var commentsCount = comments
-                        .Count(c => c.PostId == post.PostId);
-
-                    var votesCount = votes
-                        .Where(v => v.PostId == post.PostId)
-                        .Sum(v => v.VoteValue);
+                    var community = communities.FirstOrDefault(c => c.CommunityId == post.CommunityId);
+                    var author = users.FirstOrDefault(u => u.UserId == post.UserAuthorId);
+                    var commentsCount = comments.Count(c => c.PostId == post.PostId);
+                    var votesCount = votes.Where(v => v.PostId == post.PostId).Sum(v => v.VoteValue);
 
                     return new
                     {
                         postId = post.PostId,
                         title = post.Title,
                         content = post.Content,
+                        imageUrl = post.ImageUrl,
                         communityId = post.CommunityId,
                         communityName = community != null ? community.Name : "Comunidade",
                         userAuthorId = post.UserAuthorId,
@@ -566,8 +594,7 @@ public class PostsController : ControllerBase
             });
         }
     }
-
-    [HttpPost("{postId:int}/comentarios")]
+        [HttpPost("{postId:int}/comentarios")]
     [Authorize]
     public async Task<IActionResult> CreateComment(int communityId, int postId, [FromBody] CommentForm req)
     {
@@ -767,6 +794,16 @@ public class PostsController : ControllerBase
     }
 }
 
-public record PostForm([Required] string Title, [Required] string Content);
+public class PostForm
+{
+    [Required]
+    public string Title { get; set; } = string.Empty;
+
+    [Required]
+    public string Content { get; set; } = string.Empty;
+
+    public IFormFile? Image { get; set; }
+}
+
 public record CommentForm([Required] string Content);
 public record VoteForm([Required] int VoteValue);
