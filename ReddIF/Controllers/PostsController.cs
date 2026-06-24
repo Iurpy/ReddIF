@@ -259,6 +259,59 @@ public class PostsController : ControllerBase
         }
     }
 
+[HttpGet("~/api/posts/popular")]
+public async Task<IActionResult> GetPopularPosts()
+{
+    try
+    {
+        var postsResponse = await _supabase.From<Post>().Get();
+        var communitiesResponse = await _supabase.From<Community>().Get();
+        var usersResponse = await _supabase.From<ReddIF.Models.User>().Get();
+        var commentsResponse = await _supabase.From<Comment>().Get();
+        var votesResponse = await _supabase.From<PostVote>().Get();
+
+        var posts = postsResponse.Models;
+        var communities = communitiesResponse.Models;
+        var users = usersResponse.Models;
+        var comments = commentsResponse.Models;
+        var votes = votesResponse.Models;
+
+        var popular = posts
+            .Where(post => post.Active)
+            .Select(post =>
+            {
+                var community = communities.FirstOrDefault(c => c.CommunityId == post.CommunityId);
+                var author = users.FirstOrDefault(u => u.UserId == post.UserAuthorId);
+                var commentsCount = comments.Count(c => c.PostId == post.PostId);
+                var votesCount = votes.Where(v => v.PostId == post.PostId).Sum(v => v.VoteValue);
+
+                return new
+                {
+                    postId = post.PostId,
+                    title = post.Title,
+                    content = post.Content,
+                    communityId = post.CommunityId,
+                    communityName = community != null ? community.Name : "Comunidade",
+                    userAuthorId = post.UserAuthorId,
+                    authorName = author != null ? author.Name : "Usuário",
+                    createdAt = post.CreatedAt,
+                    votes = votesCount,
+                    comments = commentsCount,
+                    userVote = 0
+                };
+            })
+            .OrderByDescending(p => p.votes)
+            .ToList();
+
+        return Ok(popular);
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { erro = ex.Message, detalhe = ex.InnerException?.Message });
+    }
+}
+
+
     [HttpGet("{postId:int}")]
     public async Task<IActionResult> GetPostById(int communityId, int postId)
     {
